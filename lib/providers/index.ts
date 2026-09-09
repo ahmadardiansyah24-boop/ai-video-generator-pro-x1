@@ -8,5 +8,5 @@ export function getProvider(engine: VideoEngine): VideoProvider {
   if (engine === 'HUGGING_FACE') return huggingFaceProvider;
   if (process.env.GEMINI_API_KEY) return veoProvider;
   if (process.env.HF_TOKEN) return huggingFaceProvider;
-  throw new Error('Provider AI belum dikonfigurasi. Tambahkan GEMINI_API_KEY untuk Veo atau HF_TOKEN untuk Hugging Face di Vercel.');
+  throw new Error('Belum ada provider PRO yang dikonfigurasi. Tambahkan GEMINI_API_KEY atau HF_TOKEN di Vercel.');
 }
