@@ -1,6 +1,6 @@
 import type { VideoRequest, Scene } from '@/types/video';
 
-export type ProviderKey = 'VEO' | 'HUGGING_FACE' | 'FAL_AI' | 'MOCK';
+export type ProviderKey = 'VEO' | 'HUGGING_FACE' | 'FAL_AI';
 
 export interface VideoGenerationResult {
   id: string;
