@@ -53,6 +53,64 @@ const menu: MenuItem[] = [
 const styles = ['Educational', 'Realistic', 'Cinematic', 'Documentary', 'Anime', '3D', 'Corporate'];
 const durations = [10, 20, 30, 60, 180, 300];
 
+const workspaceInfo: Record<Section, { title: string; description: string; action: string }> = {
+  Dashboard: {
+    title: 'Dashboard PRO',
+    description: 'Pusat kontrol project video AI, engine, storyboard, dan hasil render.',
+    action: 'Dashboard dibuka',
+  },
+  'AI Image': {
+    title: 'AI Image PRO',
+    description: 'Workspace pembuatan visual AI sebagai aset pembuka untuk project video.',
+    action: 'AI Image workspace dibuka',
+  },
+  'Image to Video': {
+    title: 'Image to Video PRO',
+    description: 'Konversi gambar menjadi video dengan gerakan kamera dan visual yang konsisten.',
+    action: 'Image to Video workspace dibuka',
+  },
+  'Text to Video': {
+    title: 'Text to Video PRO',
+    description: 'Buat video langsung dari prompt menggunakan engine AI yang benar-benar terhubung.',
+    action: 'Text to Video workspace dibuka',
+  },
+  'AI Video Editor': {
+    title: 'AI Video Editor PRO',
+    description: 'Area editing project untuk pengembangan scene, urutan, dan hasil akhir.',
+    action: 'AI Video Editor workspace dibuka',
+  },
+  'AI Voice / TTS': {
+    title: 'AI Voice / TTS PRO',
+    description: 'Workspace narasi dan suara AI untuk mendukung video pembelajaran.',
+    action: 'AI Voice / TTS workspace dibuka',
+  },
+  'Prompt Enhancer': {
+    title: 'Prompt Enhancer PRO',
+    description: 'Perkuat prompt dengan detail kamera, pencahayaan, gerakan, dan kontinuitas karakter.',
+    action: 'Prompt Enhancer workspace dibuka',
+  },
+  'AI Storyboard': {
+    title: 'AI Storyboard PRO',
+    description: 'Susun scene video berdasarkan prompt dan durasi project sebelum proses render.',
+    action: 'AI Storyboard workspace dibuka',
+  },
+  'Auto Subtitle': {
+    title: 'Auto Subtitle PRO',
+    description: 'Workspace subtitle otomatis untuk menyiapkan video yang siap dipublikasikan.',
+    action: 'Auto Subtitle workspace dibuka',
+  },
+  'Background Music': {
+    title: 'Background Music PRO',
+    description: 'Area pengaturan musik latar dan nuansa audio project video.',
+    action: 'Background Music workspace dibuka',
+  },
+  'Face / Identity Lock': {
+    title: 'Face / Identity Lock PRO',
+    description: 'Atur identitas karakter agar visual tetap konsisten antar scene.',
+    action: 'Face / Identity Lock workspace dibuka',
+  },
+};
+
 export default function VideoStudio() {
   const [section, setSection] = useState<Section>('Dashboard');
   const [drawer, setDrawer] = useState(false);
@@ -73,12 +131,15 @@ export default function VideoStudio() {
   const [loading, setLoading] = useState(false);
 
   const total = useMemo(() => scenes.reduce((sum, scene) => sum + scene.duration, 0), [scenes]);
+  const workspace = workspaceInfo[section];
 
   function go(next: Section) {
     setSection(next);
     setDrawer(false);
-    setStatus(`${next} aktif`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setStatus(workspaceInfo[next].action);
+    requestAnimationFrame(() => {
+      document.getElementById('studio-workspace')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   async function makeStoryboard() {
@@ -160,12 +221,10 @@ export default function VideoStudio() {
   }
 
   function enhancePrompt() {
-    setPrompt(
-      (current) =>
-        `${current}. Cinematic composition, natural motion, consistent identity, detailed environment, professional camera movement, realistic lighting, high quality.`
+    setPrompt((current) =>
+      `${current}. Cinematic composition, natural motion, consistent identity, detailed environment, professional camera movement, realistic lighting, high quality.`
     );
     go('Prompt Enhancer');
-    setStatus('Prompt PRO ditingkatkan');
   }
 
   return (
@@ -212,7 +271,7 @@ export default function VideoStudio() {
             onClick={() => setDrawer(false)}
             aria-label="Tutup menu"
           />
-          <aside className="absolute left-0 top-0 h-full w-[86vw] max-w-[340px] overflow-y-auto bg-[#0c0b17] p-4 shadow-2xl">
+          <aside className="relative z-[101] h-full w-[86vw] max-w-[340px] overflow-y-auto bg-[#0c0b17] p-4 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
               <b>PRO MENU</b>
               <button
@@ -230,42 +289,21 @@ export default function VideoStudio() {
       )}
 
       <main className="mx-auto grid max-w-[1500px] gap-4 p-3 pb-24 sm:p-5 lg:grid-cols-[260px_minmax(0,1fr)_310px] lg:p-6 lg:pb-8">
-        <aside className="glass hidden self-start rounded-3xl p-3 lg:sticky lg:top-24 lg:block">
+        <aside className="glass relative z-20 hidden self-start rounded-3xl p-3 lg:sticky lg:top-24 lg:block">
           <MenuList active={section} onSelect={go} />
         </aside>
 
         <section className="min-w-0 space-y-4">
-          <div className="glass rounded-3xl p-4 sm:p-6">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-              <div>
-                <div className="text-[11px] font-bold uppercase tracking-[.25em] text-violet-300">
-                  {section}
-                </div>
-                <h1 className="mt-2 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
-                  <span className="gradient-text">Buat Video Profesional</span> dengan AI
-                </h1>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">
-                  Semua menu aktif sebagai workspace PRO. Tidak ada Demo Engine atau video contoh.
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2 sm:flex">
-                <button
-                  type="button"
-                  onClick={makeStoryboard}
-                  disabled={loading}
-                  className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-black disabled:opacity-50"
-                >
-                  <FileText size={16} className="mr-2 inline" /> Storyboard
-                </button>
-                <button
-                  type="button"
-                  onClick={generate}
-                  disabled={loading}
-                  className="rounded-2xl bg-gradient-to-r from-violet-500 to-cyan-400 px-4 py-3 text-sm font-black disabled:opacity-50"
-                >
-                  <Sparkles size={16} className="mr-2 inline" /> Generate PRO
-                </button>
-              </div>
+          <div id="studio-workspace" className="scroll-mt-24 glass rounded-3xl p-4 sm:p-6">
+            <div className="text-[11px] font-bold uppercase tracking-[.25em] text-violet-300">{section}</div>
+            <h1 className="mt-2 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
+              <span className="gradient-text">{workspace.title}</span>
+            </h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">{workspace.description}</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <ActionButton label="Buka Workspace" onClick={() => setStatus(`${workspace.title} dibuka`)} />
+              <ActionButton label="Save Settings" onClick={() => setStatus('Pengaturan PRO tersimpan')} />
+              <ActionButton label="Preview" primary onClick={() => setStatus('Preview diperbarui')} />
             </div>
 
             <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -273,7 +311,7 @@ export default function VideoStudio() {
                 <select
                   value={engine}
                   onChange={(event) => setEngine(event.target.value as VideoEngine)}
-                  className="mt-2 w-full bg-transparent text-sm outline-none"
+                  className="mt-2 w-full cursor-pointer bg-transparent text-sm outline-none"
                 >
                   <option value="AUTO">AUTO · REAL AI</option>
                   <option value="VEO">VEO · PRO</option>
@@ -284,11 +322,9 @@ export default function VideoStudio() {
                 <select
                   value={style}
                   onChange={(event) => setStyle(event.target.value)}
-                  className="mt-2 w-full bg-transparent text-sm outline-none"
+                  className="mt-2 w-full cursor-pointer bg-transparent text-sm outline-none"
                 >
-                  {styles.map((item) => (
-                    <option key={item}>{item}</option>
-                  ))}
+                  {styles.map((item) => <option key={item}>{item}</option>)}
                 </select>
               </Card>
               <Card label="STATUS">
@@ -312,17 +348,17 @@ export default function VideoStudio() {
               className="mt-3 min-h-[125px] w-full rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 outline-none focus:border-violet-400/40"
             />
             <div className="mt-2 flex flex-wrap gap-2">
-              <button type="button" onClick={enhancePrompt} className="rounded-xl bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
+              <button type="button" onClick={enhancePrompt} className="cursor-pointer rounded-xl bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
                 <Wand2 size={14} className="mr-1 inline" /> Enhance Prompt
               </button>
               <button
                 type="button"
                 onClick={() => setPrompt('Video cinematic tentang guru mengajar di kelas, profesional, natural, inspiratif.')}
-                className="rounded-xl bg-white/5 px-3 py-2 text-xs text-white/60"
+                className="cursor-pointer rounded-xl bg-white/5 px-3 py-2 text-xs text-white/60"
               >
                 Random Prompt
               </button>
-              <button type="button" onClick={() => setPrompt('')} className="rounded-xl bg-white/5 px-3 py-2 text-xs text-white/60">
+              <button type="button" onClick={() => setPrompt('')} className="cursor-pointer rounded-xl bg-white/5 px-3 py-2 text-xs text-white/60">
                 Clear
               </button>
             </div>
@@ -339,7 +375,7 @@ export default function VideoStudio() {
                         type="button"
                         key={value}
                         onClick={() => setDuration(value)}
-                        className={`rounded-xl px-3 py-2 text-xs ${duration === value ? 'bg-violet-500' : 'bg-white/5 text-white/55'}`}
+                        className={`cursor-pointer rounded-xl px-3 py-2 text-xs ${duration === value ? 'bg-violet-500' : 'bg-white/5 text-white/55'}`}
                       >
                         {value < 60 ? `${value}s` : `${value / 60}m`}
                       </button>
@@ -354,7 +390,7 @@ export default function VideoStudio() {
                         type="button"
                         key={value}
                         onClick={() => setRatio(value)}
-                        className={`rounded-xl px-3 py-3 text-sm ${ratio === value ? 'bg-cyan-500/20 ring-1 ring-cyan-300/20' : 'bg-white/5 text-white/55'}`}
+                        className={`cursor-pointer rounded-xl px-3 py-3 text-sm ${ratio === value ? 'bg-cyan-500/20 ring-1 ring-cyan-300/20' : 'bg-white/5 text-white/55'}`}
                       >
                         {value}
                       </button>
@@ -369,7 +405,7 @@ export default function VideoStudio() {
                         type="button"
                         key={value}
                         onClick={() => setResolution(value)}
-                        className={`rounded-xl px-3 py-2 text-xs ${resolution === value ? 'bg-cyan-500/20 ring-1 ring-cyan-300/20' : 'bg-white/5 text-white/55'}`}
+                        className={`cursor-pointer rounded-xl px-3 py-2 text-xs ${resolution === value ? 'bg-cyan-500/20 ring-1 ring-cyan-300/20' : 'bg-white/5 text-white/55'}`}
                       >
                         {value}
                       </button>
@@ -391,31 +427,19 @@ export default function VideoStudio() {
             <div className="glass rounded-3xl p-4 sm:p-5">
               <div className="mb-4 flex items-center justify-between">
                 <b>3. Storyboard & Scene Queue</b>
-                <span className="text-xs text-white/35">
-                  {scenes.length ? `${scenes.length} scene · ${total}s` : 'Belum dibuat'}
-                </span>
+                <span className="text-xs text-white/35">{scenes.length ? `${scenes.length} scene · ${total}s` : 'Belum dibuat'}</span>
               </div>
               {scenes.length ? (
                 <div className="space-y-3">
                   {scenes.map((scene, index) => (
                     <div key={scene.id} className="rounded-2xl border border-white/10 bg-black/10 p-4">
                       <div className="flex gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-sm font-black text-violet-200">
-                          {index + 1}
-                        </div>
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-sm font-black text-violet-200">{index + 1}</div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex justify-between gap-3">
-                            <b className="break-words">{scene.title}</b>
-                            <span className="shrink-0 text-xs text-white/35">{scene.duration}s</span>
-                          </div>
+                          <div className="flex justify-between gap-3"><b className="break-words">{scene.title}</b><span className="shrink-0 text-xs text-white/35">{scene.duration}s</span></div>
                           <div className="mt-2 text-xs leading-5 text-white/45">{scene.visualPrompt}</div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setStatus(`Scene ${index + 1} siap di-regenerate PRO`)}
-                          className="h-9 w-9 shrink-0 rounded-xl bg-white/5"
-                          aria-label={`Regenerate scene ${index + 1}`}
-                        >
+                        <button type="button" onClick={() => setStatus(`Scene ${index + 1} siap di-regenerate PRO`)} className="h-9 w-9 shrink-0 cursor-pointer rounded-xl bg-white/5" aria-label={`Regenerate scene ${index + 1}`}>
                           <RefreshCw size={14} className="mx-auto" />
                         </button>
                       </div>
@@ -423,27 +447,22 @@ export default function VideoStudio() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/35">
-                  Klik Storyboard untuk membuat scene dengan engine aplikasi.
-                </div>
+                <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/35">Klik Storyboard untuk membuat scene dengan engine aplikasi.</div>
               )}
             </div>
           </div>
 
-          <div className="glass rounded-3xl p-5">
-            <b>{section}</b>
-            <p className="mt-2 text-sm text-white/45">
-              Workspace {section} aktif dalam mode PRO. Semua navigasi menggunakan tombol aplikasi langsung.
-            </p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <button type="button" onClick={() => setStatus(`${section} dibuka`)} className="rounded-xl bg-white/5 p-3 text-sm">
-                Open Workspace
+          <div className="glass rounded-3xl p-4 sm:p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <b>Generate PRO</b>
+              <span className="text-xs text-white/35">Tidak ada Demo Engine</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button type="button" onClick={makeStoryboard} disabled={loading} className="cursor-pointer rounded-2xl bg-white px-4 py-3 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-50">
+                <FileText size={16} className="mr-2 inline" /> Storyboard
               </button>
-              <button type="button" onClick={() => setStatus('Pengaturan PRO tersimpan')} className="rounded-xl bg-white/5 p-3 text-sm">
-                Save Settings
-              </button>
-              <button type="button" onClick={() => setStatus('Preview diperbarui')} className="rounded-xl bg-violet-500/15 p-3 text-sm">
-                Preview
+              <button type="button" onClick={generate} disabled={loading} className="cursor-pointer rounded-2xl bg-gradient-to-r from-violet-500 to-cyan-400 px-4 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50">
+                <Sparkles size={16} className="mr-2 inline" /> Generate PRO
               </button>
             </div>
           </div>
@@ -451,25 +470,11 @@ export default function VideoStudio() {
 
         <aside className="min-w-0 xl:sticky xl:top-24 xl:self-start">
           <div className="glass rounded-3xl p-4">
-            <div className="mb-3 flex justify-between">
-              <b>Preview PRO</b>
-              <span className="text-xs text-white/30">{ratio}</span>
-            </div>
+            <div className="mb-3 flex justify-between"><b>Preview PRO</b><span className="text-xs text-white/30">{ratio}</span></div>
             <div className="flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-violet-950 via-slate-950 to-cyan-950">
-              {videoUrl ? (
-                <video src={videoUrl} controls playsInline className="h-full w-full object-contain" />
-              ) : (
-                <div className="text-center text-white/45">
-                  <Play size={26} className="mx-auto mb-2" />
-                  Belum ada video
-                </div>
-              )}
+              {videoUrl ? <video src={videoUrl} controls playsInline className="h-full w-full object-contain" /> : <div className="text-center text-white/45"><Play size={26} className="mx-auto mb-2" />Belum ada video</div>}
             </div>
-            {videoUrl && (
-              <a href={videoUrl} download className="mt-3 block rounded-xl bg-white p-3 text-center text-sm font-bold text-black">
-                <Download size={15} className="mr-2 inline" /> Download MP4
-              </a>
-            )}
+            {videoUrl && <a href={videoUrl} download className="mt-3 block rounded-xl bg-white p-3 text-center text-sm font-bold text-black"><Download size={15} className="mr-2 inline" /> Download MP4</a>}
           </div>
         </aside>
       </main>
@@ -477,12 +482,7 @@ export default function VideoStudio() {
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#080812]/95 px-2 py-2 backdrop-blur-xl lg:hidden">
         <div className="mx-auto grid max-w-xl grid-cols-4 gap-1">
           {menu.slice(0, 4).map(({ name, icon: Icon }) => (
-            <button
-              type="button"
-              key={name}
-              onClick={() => go(name)}
-              className={`rounded-xl px-1 py-2 text-[10px] ${section === name ? 'bg-violet-500/20 text-white' : 'text-white/60'}`}
-            >
+            <button type="button" key={name} onClick={() => go(name)} className={`cursor-pointer rounded-xl px-1 py-2 text-[10px] ${section === name ? 'bg-violet-500/20 text-white' : 'text-white/60'}`}>
               <Icon size={16} className="mx-auto mb-1" />
               {name.replace('AI ', '')}
             </button>
@@ -495,13 +495,14 @@ export default function VideoStudio() {
 
 function MenuList({ active, onSelect }: { active: Section; onSelect: (section: Section) => void }) {
   return (
-    <div className="space-y-1">
+    <nav className="space-y-1" aria-label="PRO menu">
       {menu.map(({ name, icon: Icon }) => (
         <button
           type="button"
           key={name}
           onClick={() => onSelect(name)}
-          className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm transition ${
+          aria-pressed={active === name}
+          className={`relative z-30 flex w-full cursor-pointer items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm transition active:scale-[0.99] ${
             active === name ? 'bg-violet-500/15 text-white ring-1 ring-violet-400/20' : 'text-white/65 hover:bg-white/5 hover:text-white'
           }`}
         >
@@ -509,7 +510,7 @@ function MenuList({ active, onSelect }: { active: Section; onSelect: (section: S
           <span className="min-w-0 break-words">{name}</span>
         </button>
       ))}
-    </div>
+    </nav>
   );
 }
 
@@ -519,4 +520,18 @@ function Card({ label, children }: { label: string; children: React.ReactNode })
 
 function SettingBlock({ label, children }: { label: string; children: React.ReactNode }) {
   return <div><div className="mb-2 text-xs text-white/40">{label}</div>{children}</div>;
+}
+
+function ActionButton({ label, onClick, primary = false }: { label: string; onClick: () => void; primary?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`cursor-pointer rounded-2xl p-3 text-sm font-bold transition active:scale-[0.99] ${
+        primary ? 'bg-violet-500/20 text-violet-100 ring-1 ring-violet-400/20 hover:bg-violet-500/30' : 'bg-white/5 text-white hover:bg-white/10'
+      }`}
+    >
+      {label}
+    </button>
+  );
 }
