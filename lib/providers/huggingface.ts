@@ -5,6 +5,8 @@ import type { VideoRequest, Scene } from '@/types/video';
 const NEGATIVE_PROMPT = [
   'low quality',
   'blurry',
+  'unfinished frames',
+  'incomplete objects',
   'deformed face',
   'deformed hands',
   'extra fingers',
@@ -20,6 +22,7 @@ const NEGATIVE_PROMPT = [
   'logo',
   'flicker',
   'jitter',
+  'frame interpolation artifacts',
 ].join(', ');
 
 export const huggingFaceProvider: VideoProvider = {
@@ -30,19 +33,21 @@ export const huggingFaceProvider: VideoProvider = {
     const token = process.env.HF_TOKEN;
     if (!token) throw new Error('HF_TOKEN belum dikonfigurasi di server.');
 
-    const model = process.env.HF_MODEL || 'Wan-AI/Wan2.2-TI2V-5B';
+    const model = process.env.HF_MODEL || 'tencent/HunyuanVideo';
     const prompt = [
-      'High-quality educational cinematic video.',
-      'A single coherent continuous shot with physically plausible motion.',
-      'Keep the main teacher character anatomically correct and visually consistent.',
-      'Natural facial expression, realistic skin, realistic hands and fingers.',
-      'Clean classroom environment, stable geometry, no unreadable writing.',
-      'Do not generate text on boards, shirts, books, or screens unless explicitly requested.',
+      'Premium cinematic educational video, polished production quality.',
+      'Generate the complete scene from the first frame to the last frame with no unfinished or partially formed objects.',
+      'One coherent continuous shot, stable geometry, temporally consistent details, physically plausible motion.',
+      'Keep the teacher and students anatomically correct and visually consistent throughout the entire clip.',
+      'Natural facial expressions, realistic skin, realistic hands and fingers, correct body proportions.',
+      'Clean modern classroom, realistic depth, professional cinematography, smooth camera movement.',
+      'Avoid readable text, logos, signs, and accidental writing in the generated environment.',
       scene.visualPrompt,
       `Camera: ${scene.camera}`,
       `Lighting: ${scene.lighting}`,
       `Character continuity: ${scene.character}`,
       `Aspect ratio target: ${req.aspectRatio}`,
+      `Resolution target: ${req.resolution}`,
       `Visual style: ${req.style}`,
     ].join('\n');
 
@@ -53,9 +58,9 @@ export const huggingFaceProvider: VideoProvider = {
         provider: 'fal-ai',
         inputs: prompt,
         parameters: {
-          num_frames: 121,
-          guidance_scale: 4,
-          num_inference_steps: 40,
+          num_frames: 81,
+          guidance_scale: 5,
+          num_inference_steps: 30,
           negative_prompt: [NEGATIVE_PROMPT],
           seed: Math.floor(Math.random() * 2_147_483_647),
         },
@@ -69,7 +74,7 @@ export const huggingFaceProvider: VideoProvider = {
         id: `hf-${scene.id}`,
         status: 'COMPLETED' as const,
         videoUrl: `data:${type};base64,${buffer.toString('base64')}`,
-        message: `Video PRO selesai melalui Hugging Face Inference Providers (${model}), 24fps/sekitar 5 detik per clip.`,
+        message: `Video PRO selesai melalui Hugging Face Inference Providers (${model}).`,
         provider: 'HUGGING_FACE',
       };
     } catch (error) {
