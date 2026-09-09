@@ -40,14 +40,15 @@ export const falProvider: VideoProvider = {
       `Visual style: ${req.style}`,
     ].join('\n');
 
+    const duration = getDuration(req.duration);
+
     const result = await fal.subscribe('fal-ai/wan/v2.7/text-to-video', {
       input: {
         prompt: prompt.slice(0, 5000),
         negative_prompt: NEGATIVE_PROMPT.slice(0, 500),
         aspect_ratio: req.aspectRatio,
         resolution: req.resolution === '720p' ? '720p' : '1080p',
-        duration: getDuration(req.duration),
-        audio: true,
+        duration,
         enable_prompt_expansion: true,
       },
       logs: false,
@@ -60,7 +61,7 @@ export const falProvider: VideoProvider = {
       id: result.requestId || `fal-${scene.id}`,
       status: 'COMPLETED' as const,
       videoUrl: video.url,
-      message: `Video PRO selesai melalui Fal AI Wan 2.7 dengan audio. Durasi clip: ${getDuration(req.duration)} detik.`,
+      message: `Video PRO selesai melalui Fal AI Wan 2.7. Fal AI akan menghasilkan audio latar otomatis bila audio_url tidak diberikan. Durasi clip: ${duration} detik.`,
       provider: 'HUGGING_FACE',
     };
   },
