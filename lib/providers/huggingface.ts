@@ -10,8 +10,6 @@ export const huggingFaceProvider: VideoProvider = {
     const token = process.env.HF_TOKEN;
     if (!token) throw new Error('HF_TOKEN belum dikonfigurasi di server.');
 
-    // HF Inference (hf-inference) tidak menyediakan text-to-video.
-    // Gunakan provider text-to-video yang tersedia melalui HF Inference Providers.
     const model = process.env.HF_MODEL || 'Wan-AI/Wan2.2-TI2V-5B';
     const prompt = [
       scene.visualPrompt,
@@ -27,7 +25,7 @@ export const huggingFaceProvider: VideoProvider = {
       const video = await client.textToVideo({
         model,
         provider: 'fal-ai',
-        prompt,
+        inputs: prompt,
       });
 
       const type = video.type || 'video/mp4';
