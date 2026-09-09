@@ -2,18 +2,20 @@ import { fal } from '@fal-ai/client';
 import type { VideoProvider } from './types';
 import type { VideoRequest, Scene } from '@/types/video';
 
+type WanDuration = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
+
 const NEGATIVE_PROMPT = [
   'blurry, low quality, deformed face, deformed hands, extra fingers, extra limbs',
   'warped body, duplicate person, flicker, jitter, broken anatomy',
   'garbled text, random letters, watermark, logo, unstable geometry',
 ].join(', ');
 
-function getDuration(seconds: number) {
-  const allowed = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+function getDuration(seconds: number): WanDuration {
+  const allowed: WanDuration[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
   const target = Math.round(Number(seconds) || 5);
-  return allowed.reduce((best, value) =>
-    Math.abs(value - target) < Math.abs(best - target) ? value : best,
-    allowed[0],
+  return allowed.reduce<WanDuration>(
+    (best, value) => Math.abs(value - target) < Math.abs(best - target) ? value : best,
+    5,
   );
 }
 
@@ -54,14 +56,14 @@ export const falProvider: VideoProvider = {
       logs: false,
     });
 
-    const video = result.data?.video;
+    const video = (result.data as { video?: { url?: string } } | undefined)?.video;
     if (!video?.url) throw new Error('Fal AI tidak mengembalikan URL video.');
 
     return {
       id: result.requestId || `fal-${scene.id}`,
       status: 'COMPLETED' as const,
       videoUrl: video.url,
-      message: `Video PRO selesai melalui Fal AI Wan 2.7. Fal AI akan menghasilkan audio latar otomatis bila audio_url tidak diberikan. Durasi clip: ${duration} detik.`,
+      message: `Video PRO selesai melalui Fal AI Wan 2.7. Durasi clip: ${duration} detik.`,
       provider: 'HUGGING_FACE',
     };
   },
