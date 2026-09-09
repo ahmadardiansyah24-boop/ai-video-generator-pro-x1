@@ -1,5 +1,5 @@
 export type AspectRatio = '9:16' | '16:9' | '1:1';
-export type VideoEngine = 'AUTO' | 'VEO' | 'HUGGING_FACE';
+export type VideoEngine = 'AUTO' | 'VEO' | 'HUGGING_FACE' | 'FAL_AI';
 export type JobStatus = 'QUEUED' | 'GENERATING' | 'PROCESSING' | 'COMPOSITING' | 'UPLOADING' | 'COMPLETED' | 'FAILED';
 
 export interface Scene {
