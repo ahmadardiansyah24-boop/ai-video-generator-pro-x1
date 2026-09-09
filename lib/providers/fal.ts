@@ -11,12 +11,9 @@ const NEGATIVE_PROMPT = [
 ].join(', ');
 
 function getDuration(seconds: number): WanDuration {
-  const allowed: WanDuration[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+  const allowed: WanDuration[] = [2,3,4,5,6,7,8,9,10,11,12,13,14,15];
   const target = Math.max(2, Math.min(15, Math.round(Number(seconds) || 5)));
-  return allowed.reduce<WanDuration>(
-    (best, value) => Math.abs(value - target) < Math.abs(best - target) ? value : best,
-    5,
-  );
+  return allowed.reduce<WanDuration>((best, value) => Math.abs(value-target) < Math.abs(best-target) ? value : best, 5);
 }
 
 export const falProvider: VideoProvider = {
@@ -26,7 +23,6 @@ export const falProvider: VideoProvider = {
   async generateTextToVideo(req: VideoRequest, scene: Scene) {
     const key = process.env.FAL_KEY;
     if (!key) throw new Error('FAL_KEY belum dikonfigurasi di server.');
-
     fal.config({ credentials: key });
 
     const prompt = [
@@ -43,28 +39,24 @@ export const falProvider: VideoProvider = {
     ].join('\n');
 
     const duration = getDuration(req.duration);
+    const input = {
+      prompt: prompt.slice(0, 5000),
+      negative_prompt: NEGATIVE_PROMPT.slice(0, 500),
+      aspect_ratio: req.aspectRatio,
+      resolution: req.resolution === '720p' ? '720p' : '1080p',
+      duration,
+      enable_prompt_expansion: true,
+    } as any;
 
     try {
-      const result = await fal.subscribe('fal-ai/wan/v2.7/text-to-video', {
-        input: {
-          prompt: prompt.slice(0, 5000),
-          negative_prompt: NEGATIVE_PROMPT.slice(0, 500),
-          aspect_ratio: req.aspectRatio,
-          resolution: req.resolution === '720p' ? '720p' : '1080p',
-          duration,
-          enable_prompt_expansion: true,
-        },
-        logs: false,
-      });
-
-      const video = (result.data as { video?: { url?: string } } | undefined)?.video;
+      const result = await fal.subscribe('fal-ai/wan/v2.7/text-to-video', { input, logs: false });
+      const video = (result.data as any)?.video as { url?: string } | undefined;
       if (!video?.url) throw new Error('Fal AI tidak mengembalikan URL video.');
-
       return {
         id: result.requestId || `fal-${scene.id}`,
         status: 'COMPLETED' as const,
         videoUrl: video.url,
-        message: `Video PRO selesai melalui Fal AI Wan 2.7. Clip ${duration} detik.`,
+        message: `Video PRO selesai melalui Fal AI Wan 2.7. Clip ${duration} detik dengan audio latar AI.`,
         provider: 'FAL_AI' as const,
       };
     } catch (error) {
