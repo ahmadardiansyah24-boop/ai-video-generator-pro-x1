@@ -1,537 +1,108 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-  AudioLines,
-  Captions,
-  Clapperboard,
-  Download,
-  FileText,
-  Film,
-  Image as ImageIcon,
-  LayoutDashboard,
-  Menu,
-  Mic2,
-  Play,
-  RefreshCw,
-  Sparkles,
-  Video,
-  Wand2,
-  X,
-} from 'lucide-react';
+import { AudioLines, Captions, Clapperboard, Download, FileText, Film, Image as ImageIcon, LayoutDashboard, Menu, Mic2, RefreshCw, Sparkles, Video, Wand2, X } from 'lucide-react';
 import type { AspectRatio, Scene, VideoEngine } from '@/types/video';
 
-type Section =
-  | 'Dashboard'
-  | 'AI Image'
-  | 'Image to Video'
-  | 'Text to Video'
-  | 'AI Video Editor'
-  | 'AI Voice / TTS'
-  | 'Prompt Enhancer'
-  | 'AI Storyboard'
-  | 'Auto Subtitle'
-  | 'Background Music'
-  | 'Face / Identity Lock';
-
+type Section = 'Dashboard'|'AI Image'|'Image to Video'|'Text to Video'|'AI Video Editor'|'AI Voice / TTS'|'Prompt Enhancer'|'AI Storyboard'|'Auto Subtitle'|'Background Music'|'Face / Identity Lock';
 type MenuItem = { name: Section; icon: typeof LayoutDashboard };
 
 const menu: MenuItem[] = [
-  { name: 'Dashboard', icon: LayoutDashboard },
-  { name: 'AI Image', icon: ImageIcon },
-  { name: 'Image to Video', icon: Video },
-  { name: 'Text to Video', icon: Film },
-  { name: 'AI Video Editor', icon: Clapperboard },
-  { name: 'AI Voice / TTS', icon: Mic2 },
-  { name: 'Prompt Enhancer', icon: Wand2 },
-  { name: 'AI Storyboard', icon: FileText },
-  { name: 'Auto Subtitle', icon: Captions },
-  { name: 'Background Music', icon: AudioLines },
-  { name: 'Face / Identity Lock', icon: Sparkles },
+  {name:'Dashboard',icon:LayoutDashboard},{name:'AI Image',icon:ImageIcon},{name:'Image to Video',icon:Video},
+  {name:'Text to Video',icon:Film},{name:'AI Video Editor',icon:Clapperboard},{name:'AI Voice / TTS',icon:Mic2},
+  {name:'Prompt Enhancer',icon:Wand2},{name:'AI Storyboard',icon:FileText},{name:'Auto Subtitle',icon:Captions},
+  {name:'Background Music',icon:AudioLines},{name:'Face / Identity Lock',icon:Sparkles},
 ];
+const styles=['Educational','Realistic','Cinematic','Documentary','Anime','3D','Corporate'];
+const projectDurations=[10,20,30,60,180,300];
+const clipDurations=[5,10,15];
 
-const styles = ['Educational', 'Realistic', 'Cinematic', 'Documentary', 'Anime', '3D', 'Corporate'];
-const durations = [10, 20, 30, 60, 180, 300];
+export default function VideoStudio(){
+  const [section,setSection]=useState<Section>('Dashboard');
+  const [drawer,setDrawer]=useState(false);
+  const [prompt,setPrompt]=useState('Buat video pembelajaran bilangan bulat untuk kelas VII, guru menjelaskan konsep di kelas dengan visual menarik dan gerakan kamera natural.');
+  const [projectDuration,setProjectDuration]=useState(60);
+  const [clipDuration,setClipDuration]=useState(10);
+  const [ratio,setRatio]=useState<AspectRatio>('16:9');
+  const [resolution,setResolution]=useState('1080p');
+  const [style,setStyle]=useState('Educational');
+  const [engine,setEngine]=useState<VideoEngine>('FAL_AI');
+  const [character,setCharacter]=useState('Guru Indonesia profesional, ramah, berpakaian sopan, identitas visual konsisten sepanjang video.');
+  const [scenes,setScenes]=useState<Scene[]>([]);
+  const [videoUrl,setVideoUrl]=useState('');
+  const [status,setStatus]=useState('PRO siap digunakan');
+  const [loading,setLoading]=useState(false);
 
-const workspaceInfo: Record<Section, { title: string; description: string; action: string }> = {
-  Dashboard: {
-    title: 'Dashboard PRO',
-    description: 'Pusat kontrol project video AI, engine, storyboard, dan hasil render.',
-    action: 'Dashboard dibuka',
-  },
-  'AI Image': {
-    title: 'AI Image PRO',
-    description: 'Workspace pembuatan visual AI sebagai aset pembuka untuk project video.',
-    action: 'AI Image workspace dibuka',
-  },
-  'Image to Video': {
-    title: 'Image to Video PRO',
-    description: 'Konversi gambar menjadi video dengan gerakan kamera dan visual yang konsisten.',
-    action: 'Image to Video workspace dibuka',
-  },
-  'Text to Video': {
-    title: 'Text to Video PRO',
-    description: 'Buat video langsung dari prompt menggunakan engine AI yang benar-benar terhubung.',
-    action: 'Text to Video workspace dibuka',
-  },
-  'AI Video Editor': {
-    title: 'AI Video Editor PRO',
-    description: 'Area editing project untuk pengembangan scene, urutan, dan hasil akhir.',
-    action: 'AI Video Editor workspace dibuka',
-  },
-  'AI Voice / TTS': {
-    title: 'AI Voice / TTS PRO',
-    description: 'Workspace narasi dan suara AI untuk mendukung video pembelajaran.',
-    action: 'AI Voice / TTS workspace dibuka',
-  },
-  'Prompt Enhancer': {
-    title: 'Prompt Enhancer PRO',
-    description: 'Perkuat prompt dengan detail kamera, pencahayaan, gerakan, dan kontinuitas karakter.',
-    action: 'Prompt Enhancer workspace dibuka',
-  },
-  'AI Storyboard': {
-    title: 'AI Storyboard PRO',
-    description: 'Susun scene video berdasarkan prompt dan durasi project sebelum proses render.',
-    action: 'AI Storyboard workspace dibuka',
-  },
-  'Auto Subtitle': {
-    title: 'Auto Subtitle PRO',
-    description: 'Workspace subtitle otomatis untuk menyiapkan video yang siap dipublikasikan.',
-    action: 'Auto Subtitle workspace dibuka',
-  },
-  'Background Music': {
-    title: 'Background Music PRO',
-    description: 'Area pengaturan musik latar dan nuansa audio project video.',
-    action: 'Background Music workspace dibuka',
-  },
-  'Face / Identity Lock': {
-    title: 'Face / Identity Lock PRO',
-    description: 'Atur identitas karakter agar visual tetap konsisten antar scene.',
-    action: 'Face / Identity Lock workspace dibuka',
-  },
-};
+  const total=useMemo(()=>scenes.reduce((sum,scene)=>sum+scene.duration,0),[scenes]);
+  const generatedClip=useMemo(()=>scenes[0]?.duration||0,[scenes]);
 
-export default function VideoStudio() {
-  const [section, setSection] = useState<Section>('Dashboard');
-  const [drawer, setDrawer] = useState(false);
-  const [prompt, setPrompt] = useState(
-    'Buat video pembelajaran bilangan bulat untuk kelas VII, guru menjelaskan konsep di kelas dengan visual menarik dan gerakan kamera natural.'
-  );
-  const [duration, setDuration] = useState(60);
-  const [ratio, setRatio] = useState<AspectRatio>('16:9');
-  const [resolution, setResolution] = useState('1080p');
-  const [style, setStyle] = useState('Educational');
-  const [engine, setEngine] = useState<VideoEngine>('AUTO');
-  const [character, setCharacter] = useState(
-    'Guru Indonesia profesional, ramah, berpakaian sopan, identitas visual konsisten sepanjang video.'
-  );
-  const [scenes, setScenes] = useState<Scene[]>([]);
-  const [videoUrl, setVideoUrl] = useState('');
-  const [status, setStatus] = useState('PRO siap digunakan');
-  const [loading, setLoading] = useState(false);
+  function go(next:Section){setSection(next);setDrawer(false);setStatus(`${next} workspace dibuka`);requestAnimationFrame(()=>document.getElementById('studio-workspace')?.scrollIntoView({behavior:'smooth',block:'start'}));}
 
-  const total = useMemo(() => scenes.reduce((sum, scene) => sum + scene.duration, 0), [scenes]);
-  const workspace = workspaceInfo[section];
-
-  function go(next: Section) {
-    setSection(next);
-    setDrawer(false);
-    setStatus(workspaceInfo[next].action);
-    requestAnimationFrame(() => {
-      document.getElementById('studio-workspace')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+  async function storyboard(){
+    setLoading(true);setStatus('Menyusun storyboard PRO…');
+    try{
+      const r=await fetch('/api/storyboard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,duration:projectDuration,character})});
+      const j=await r.json();if(!r.ok)throw new Error(j.error||'Storyboard gagal.');
+      setScenes(j.scenes||[]);setSection('AI Storyboard');setStatus(`${j.scenes?.length||0} scene siap untuk project ${projectDuration}s`);
+    }catch(e){setStatus(e instanceof Error?e.message:'Storyboard gagal.');}finally{setLoading(false);}
   }
 
-  async function makeStoryboard() {
-    setLoading(true);
-    setStatus('Menyusun storyboard PRO…');
-    try {
-      const response = await fetch('/api/storyboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, duration, character }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Storyboard gagal.');
-      setScenes(data.scenes || []);
-      setSection('AI Storyboard');
-      setStatus(`${data.scenes?.length || 0} scene siap`);
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Storyboard gagal.');
-    } finally {
-      setLoading(false);
-    }
+  async function generate(){
+    setLoading(true);setVideoUrl('');setStatus('Menghubungkan ke Fal AI Wan 2.7…');
+    try{
+      const r=await fetch('/api/video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        title:'AI Video Project',prompt,type:'Educational',language:'id',duration:clipDuration,aspectRatio:ratio,style,engine,resolution,
+        characterDescription:character,subtitle:true,
+      })});
+      const j=await r.json();if(!r.ok)throw new Error(j.error||'Render PRO gagal.');
+      setScenes(j.scenes||[]);setVideoUrl(j.job?.videoUrl||'');
+      setStatus(j.message||'Video PRO selesai');
+    }catch(e){setStatus(e instanceof Error?e.message:'Render PRO gagal.');}finally{setLoading(false);}
   }
 
-  async function generate() {
-    setLoading(true);
-    setVideoUrl('');
-    setStatus('Menghubungkan ke engine PRO…');
-    try {
-      const response = await fetch('/api/video', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: 'AI Video Project',
-          prompt,
-          type: 'Educational',
-          language: 'id',
-          duration,
-          aspectRatio: ratio,
-          style,
-          engine,
-          resolution,
-          characterDescription: character,
-          subtitle: true,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Render PRO gagal.');
-      setScenes(data.scenes || []);
-      setVideoUrl(data.job?.videoUrl || '');
-      setStatus(data.message || 'Job PRO dibuat');
-      if (data.job?.status === 'PROCESSING' && data.job?.id) {
-        void poll(data.job.id, (data.provider || engine) as VideoEngine);
-      }
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Render PRO gagal.');
-    } finally {
-      setLoading(false);
-    }
-  }
+  function enhance(){setPrompt(p=>`${p}. Cinematic composition, realistic physical motion, consistent identity, detailed classroom environment, natural camera movement, realistic lighting, anatomically correct hands and face, clean composition.`);go('Prompt Enhancer');}
 
-  async function poll(id: string, selectedEngine: VideoEngine) {
-    for (let attempt = 0; attempt < 60; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      try {
-        const response = await fetch(
-          `/api/video/status?id=${encodeURIComponent(id)}&engine=${selectedEngine}`
-        );
-        const data = await response.json();
-        if (data.videoUrl) setVideoUrl(data.videoUrl);
-        if (data.status === 'COMPLETED') {
-          setStatus('Video PRO selesai dibuat');
-          return;
-        }
-        setStatus(`Rendering PRO… ${data.status || 'PROCESSING'}`);
-      } catch {
-        setStatus('Menunggu status engine PRO…');
-      }
-    }
-  }
-
-  function enhancePrompt() {
-    setPrompt((current) =>
-      `${current}. Cinematic composition, natural motion, consistent identity, detailed environment, professional camera movement, realistic lighting, high quality.`
-    );
-    go('Prompt Enhancer');
-  }
-
-  return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#18112f,#080812_48%)] text-white">
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#080812]/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-3 py-3 sm:px-5 lg:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setDrawer(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 lg:hidden"
-              aria-label="Buka menu"
-            >
-              <Menu size={20} />
-            </button>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400">
-              <Clapperboard size={20} />
-            </div>
-            <div className="min-w-0">
-              <div className="truncate font-black">
-                AI WORLD <span className="text-violet-300">STUDIO X</span>
-              </div>
-              <div className="hidden text-xs text-white/40 sm:block">
-                AI Video Generator PRO · By Ahmad Yurid Ardiansyah, S.Pd.
-              </div>
-            </div>
-          </div>
-          <div className="hidden gap-2 sm:flex">
-            <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs text-violet-200">
-              PRO WORKSPACE
-            </span>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">
-              REAL AI
-            </span>
-          </div>
-        </div>
-      </header>
-
-      {drawer && (
-        <div className="fixed inset-0 z-[100] lg:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/70"
-            onClick={() => setDrawer(false)}
-            aria-label="Tutup menu"
-          />
-          <aside className="relative z-[101] h-full w-[86vw] max-w-[340px] overflow-y-auto bg-[#0c0b17] p-4 shadow-2xl">
-            <div className="mb-6 flex items-center justify-between">
-              <b>PRO MENU</b>
-              <button
-                type="button"
-                onClick={() => setDrawer(false)}
-                className="rounded-xl border border-white/10 p-2"
-                aria-label="Tutup"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <MenuList active={section} onSelect={go} />
-          </aside>
-        </div>
-      )}
-
-      <main className="mx-auto grid max-w-[1500px] gap-4 p-3 pb-24 sm:p-5 lg:grid-cols-[260px_minmax(0,1fr)_310px] lg:p-6 lg:pb-8">
-        <aside className="glass relative z-20 hidden self-start rounded-3xl p-3 lg:sticky lg:top-24 lg:block">
-          <MenuList active={section} onSelect={go} />
-        </aside>
-
-        <section className="min-w-0 space-y-4">
-          <div id="studio-workspace" className="scroll-mt-24 glass rounded-3xl p-4 sm:p-6">
-            <div className="text-[11px] font-bold uppercase tracking-[.25em] text-violet-300">{section}</div>
-            <h1 className="mt-2 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
-              <span className="gradient-text">{workspace.title}</span>
-            </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">{workspace.description}</p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <ActionButton label="Buka Workspace" onClick={() => setStatus(`${workspace.title} dibuka`)} />
-              <ActionButton label="Save Settings" onClick={() => setStatus('Pengaturan PRO tersimpan')} />
-              <ActionButton label="Preview" primary onClick={() => setStatus('Preview diperbarui')} />
-            </div>
-
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <Card label="ENGINE PRO">
-                <select
-                  value={engine}
-                  onChange={(event) => setEngine(event.target.value as VideoEngine)}
-                  className="mt-2 w-full cursor-pointer bg-transparent text-sm outline-none"
-                >
-                  <option value="AUTO">AUTO · REAL AI</option>
-                  <option value="VEO">VEO · PRO</option>
-                  <option value="HUGGING_FACE">HUGGING FACE · PRO</option>
-                </select>
-              </Card>
-              <Card label="STYLE">
-                <select
-                  value={style}
-                  onChange={(event) => setStyle(event.target.value)}
-                  className="mt-2 w-full cursor-pointer bg-transparent text-sm outline-none"
-                >
-                  {styles.map((item) => <option key={item}>{item}</option>)}
-                </select>
-              </Card>
-              <Card label="STATUS">
-                <div className="mt-2 flex items-center gap-2 text-sm text-cyan-200">
-                  <i className={`h-2 w-2 rounded-full ${loading ? 'animate-pulse bg-amber-300' : 'bg-cyan-300'}`} />
-                  {status}
-                </div>
-              </Card>
-            </div>
-          </div>
-
-          <div className="glass rounded-3xl p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <b>1. Ide / Prompt</b>
-              <span className="text-xs text-white/30">PRO</span>
-            </div>
-            <textarea
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              rows={5}
-              className="mt-3 min-h-[125px] w-full rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 outline-none focus:border-violet-400/40"
-            />
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button type="button" onClick={enhancePrompt} className="cursor-pointer rounded-xl bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
-                <Wand2 size={14} className="mr-1 inline" /> Enhance Prompt
-              </button>
-              <button
-                type="button"
-                onClick={() => setPrompt('Video cinematic tentang guru mengajar di kelas, profesional, natural, inspiratif.')}
-                className="cursor-pointer rounded-xl bg-white/5 px-3 py-2 text-xs text-white/60"
-              >
-                Random Prompt
-              </button>
-              <button type="button" onClick={() => setPrompt('')} className="cursor-pointer rounded-xl bg-white/5 px-3 py-2 text-xs text-white/60">
-                Clear
-              </button>
-            </div>
-          </div>
-
-          <div className="grid gap-4 xl:grid-cols-2">
-            <div className="glass rounded-3xl p-4 sm:p-5">
-              <b>2. Video Settings</b>
-              <div className="mt-4 space-y-4">
-                <SettingBlock label="DURATION">
-                  <div className="flex flex-wrap gap-2">
-                    {durations.map((value) => (
-                      <button
-                        type="button"
-                        key={value}
-                        onClick={() => setDuration(value)}
-                        className={`cursor-pointer rounded-xl px-3 py-2 text-xs ${duration === value ? 'bg-violet-500' : 'bg-white/5 text-white/55'}`}
-                      >
-                        {value < 60 ? `${value}s` : `${value / 60}m`}
-                      </button>
-                    ))}
-                  </div>
-                </SettingBlock>
-
-                <SettingBlock label="ASPECT RATIO">
-                  <div className="grid grid-cols-3 gap-2">
-                    {(['9:16', '16:9', '1:1'] as AspectRatio[]).map((value) => (
-                      <button
-                        type="button"
-                        key={value}
-                        onClick={() => setRatio(value)}
-                        className={`cursor-pointer rounded-xl px-3 py-3 text-sm ${ratio === value ? 'bg-cyan-500/20 ring-1 ring-cyan-300/20' : 'bg-white/5 text-white/55'}`}
-                      >
-                        {value}
-                      </button>
-                    ))}
-                  </div>
-                </SettingBlock>
-
-                <SettingBlock label="RESOLUTION">
-                  <div className="grid grid-cols-3 gap-2">
-                    {['720p', '1080p', '4K'].map((value) => (
-                      <button
-                        type="button"
-                        key={value}
-                        onClick={() => setResolution(value)}
-                        className={`cursor-pointer rounded-xl px-3 py-2 text-xs ${resolution === value ? 'bg-cyan-500/20 ring-1 ring-cyan-300/20' : 'bg-white/5 text-white/55'}`}
-                      >
-                        {value}
-                      </button>
-                    ))}
-                  </div>
-                </SettingBlock>
-
-                <SettingBlock label="CHARACTER / IDENTITY BIBLE">
-                  <textarea
-                    value={character}
-                    onChange={(event) => setCharacter(event.target.value)}
-                    rows={3}
-                    className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-xs outline-none"
-                  />
-                </SettingBlock>
-              </div>
-            </div>
-
-            <div className="glass rounded-3xl p-4 sm:p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <b>3. Storyboard & Scene Queue</b>
-                <span className="text-xs text-white/35">{scenes.length ? `${scenes.length} scene · ${total}s` : 'Belum dibuat'}</span>
-              </div>
-              {scenes.length ? (
-                <div className="space-y-3">
-                  {scenes.map((scene, index) => (
-                    <div key={scene.id} className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                      <div className="flex gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-sm font-black text-violet-200">{index + 1}</div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex justify-between gap-3"><b className="break-words">{scene.title}</b><span className="shrink-0 text-xs text-white/35">{scene.duration}s</span></div>
-                          <div className="mt-2 text-xs leading-5 text-white/45">{scene.visualPrompt}</div>
-                        </div>
-                        <button type="button" onClick={() => setStatus(`Scene ${index + 1} siap di-regenerate PRO`)} className="h-9 w-9 shrink-0 cursor-pointer rounded-xl bg-white/5" aria-label={`Regenerate scene ${index + 1}`}>
-                          <RefreshCw size={14} className="mx-auto" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/35">Klik Storyboard untuk membuat scene dengan engine aplikasi.</div>
-              )}
-            </div>
-          </div>
-
-          <div className="glass rounded-3xl p-4 sm:p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <b>Generate PRO</b>
-              <span className="text-xs text-white/35">Tidak ada Demo Engine</span>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button type="button" onClick={makeStoryboard} disabled={loading} className="cursor-pointer rounded-2xl bg-white px-4 py-3 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-50">
-                <FileText size={16} className="mr-2 inline" /> Storyboard
-              </button>
-              <button type="button" onClick={generate} disabled={loading} className="cursor-pointer rounded-2xl bg-gradient-to-r from-violet-500 to-cyan-400 px-4 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50">
-                <Sparkles size={16} className="mr-2 inline" /> Generate PRO
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <aside className="min-w-0 xl:sticky xl:top-24 xl:self-start">
-          <div className="glass rounded-3xl p-4">
-            <div className="mb-3 flex justify-between"><b>Preview PRO</b><span className="text-xs text-white/30">{ratio}</span></div>
-            <div className="flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-violet-950 via-slate-950 to-cyan-950">
-              {videoUrl ? <video src={videoUrl} controls playsInline className="h-full w-full object-contain" /> : <div className="text-center text-white/45"><Play size={26} className="mx-auto mb-2" />Belum ada video</div>}
-            </div>
-            {videoUrl && <a href={videoUrl} download className="mt-3 block rounded-xl bg-white p-3 text-center text-sm font-bold text-black"><Download size={15} className="mr-2 inline" /> Download MP4</a>}
-          </div>
-        </aside>
-      </main>
-
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#080812]/95 px-2 py-2 backdrop-blur-xl lg:hidden">
-        <div className="mx-auto grid max-w-xl grid-cols-4 gap-1">
-          {menu.slice(0, 4).map(({ name, icon: Icon }) => (
-            <button type="button" key={name} onClick={() => go(name)} className={`cursor-pointer rounded-xl px-1 py-2 text-[10px] ${section === name ? 'bg-violet-500/20 text-white' : 'text-white/60'}`}>
-              <Icon size={16} className="mx-auto mb-1" />
-              {name.replace('AI ', '')}
-            </button>
-          ))}
-        </div>
+  return <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,#18112f,#080812_48%)] text-white">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#080812]/95 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-3 py-3 sm:px-5 lg:px-6">
+        <div className="flex min-w-0 items-center gap-3"><button type="button" onClick={()=>setDrawer(true)} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 lg:hidden" aria-label="Buka menu"><Menu size={20}/></button><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400"><Clapperboard size={20}/></div><div className="min-w-0"><div className="truncate font-black">AI WORLD <span className="text-violet-300">STUDIO X</span></div><div className="hidden text-xs text-white/40 sm:block">AI Video Generator PRO · By Ahmad Yurid Ardiansyah, S.Pd.</div></div></div>
+        <div className="hidden gap-2 sm:flex"><span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs text-violet-200">PRO WORKSPACE</span><span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">REAL AI</span></div>
       </div>
-    </div>
-  );
+    </header>
+    {drawer&&<div className="fixed inset-0 z-[100] lg:hidden"><button type="button" className="absolute inset-0 bg-black/70" onClick={()=>setDrawer(false)} aria-label="Tutup menu"/><aside className="relative z-[101] h-full w-[86vw] max-w-[340px] overflow-y-auto bg-[#0c0b17] p-4 shadow-2xl"><div className="mb-6 flex items-center justify-between"><b>PRO MENU</b><button type="button" onClick={()=>setDrawer(false)} className="rounded-xl border border-white/10 p-2" aria-label="Tutup"><X size={18}/></button></div><MenuList active={section} onSelect={go}/></aside></div>}
+
+    <main className="mx-auto grid max-w-[1500px] gap-4 p-3 pb-24 sm:p-5 lg:grid-cols-[250px_minmax(0,1fr)_300px] lg:p-6 lg:pb-8">
+      <aside className="glass hidden self-start rounded-3xl p-3 lg:sticky lg:top-24 lg:block"><MenuList active={section} onSelect={go}/></aside>
+      <section className="min-w-0 space-y-4">
+        <div id="studio-workspace" className="glass scroll-mt-24 rounded-3xl p-4 sm:p-6">
+          <div className="text-[11px] font-bold uppercase tracking-[.25em] text-violet-300">{section}</div>
+          <h1 className="mt-2 text-3xl font-black leading-tight sm:text-4xl"><span className="gradient-text">AI Video Generator PRO</span></h1>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">Generate nyata melalui provider AI. Tidak ada Demo Engine, video contoh, atau mock result.</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2"><button type="button" onClick={storyboard} disabled={loading} className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-black disabled:opacity-50"><FileText size={16} className="mr-2 inline"/>Buat Storyboard</button><button type="button" onClick={generate} disabled={loading} className="rounded-2xl bg-gradient-to-r from-violet-500 to-cyan-400 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><Sparkles size={16} className="mr-2 inline"/>Generate Clip PRO</button></div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <Card label="ENGINE PRO"><select value={engine} onChange={e=>setEngine(e.target.value as VideoEngine)} className="mt-2 w-full bg-transparent text-sm outline-none"><option value="FAL_AI">FAL AI · WAN 2.7</option><option value="AUTO">AUTO · REAL AI</option><option value="VEO">VEO · PRO</option><option value="HUGGING_FACE">HUGGING FACE · PRO</option></select></Card>
+            <Card label="STYLE"><select value={style} onChange={e=>setStyle(e.target.value)} className="mt-2 w-full bg-transparent text-sm outline-none">{styles.map(x=><option key={x}>{x}</option>)}</select></Card>
+            <Card label="STATUS"><div className="mt-2 flex items-center gap-2 text-sm text-cyan-200"><i className={`h-2 w-2 rounded-full ${loading?'animate-pulse bg-amber-300':'bg-cyan-300'}`}/><span className="break-words">{status}</span></div></Card>
+          </div>
+        </div>
+
+        <div className="glass rounded-3xl p-4 sm:p-5"><div className="flex items-center justify-between"><b>1. Ide / Prompt</b><span className="text-xs text-white/30">PRO</span></div><textarea value={prompt} onChange={e=>setPrompt(e.target.value)} rows={5} className="mt-3 min-h-[125px] w-full rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 outline-none focus:border-violet-400/40"/><div className="mt-2 flex flex-wrap gap-2"><button type="button" onClick={enhance} className="rounded-xl bg-violet-500/10 px-3 py-2 text-xs text-violet-200"><Wand2 size={14} className="mr-1 inline"/>Enhance Prompt</button><button type="button" onClick={()=>setPrompt('Video cinematic tentang guru mengajar di kelas, profesional, natural, inspiratif.')} className="rounded-xl bg-white/5 px-3 py-2 text-xs text-white/60">Random Prompt</button><button type="button" onClick={()=>setPrompt('')} className="rounded-xl bg-white/5 px-3 py-2 text-xs text-white/60">Clear</button></div></div>
+
+        <div className="grid gap-4 xl:grid-cols-2">
+          <div className="glass rounded-3xl p-4 sm:p-5"><b>2. Video Settings</b><div className="mt-4 space-y-4"><div><div className="mb-2 text-xs text-white/40">PROJECT TARGET</div><div className="flex flex-wrap gap-2">{projectDurations.map(d=><button type="button" key={d} onClick={()=>setProjectDuration(d)} className={`rounded-xl px-3 py-2 text-xs ${projectDuration===d?'bg-violet-500':'bg-white/5 text-white/55'}`}>{d<60?`${d}s`:`${d/60}m`}</button>)}</div><p className="mt-2 text-[11px] leading-5 text-white/35">Target storyboard/project. Provider clip individual dibatasi 2–15 detik.</p></div><div><div className="mb-2 text-xs text-white/40">FAL CLIP DURATION</div><div className="flex flex-wrap gap-2">{clipDurations.map(d=><button type="button" key={d} onClick={()=>setClipDuration(d)} className={`rounded-xl px-3 py-2 text-xs ${clipDuration===d?'bg-cyan-500':'bg-white/5 text-white/55'}`}>{d}s</button>)}</div></div><div><div className="mb-2 text-xs text-white/40">ASPECT RATIO</div><div className="grid grid-cols-3 gap-2">{(['9:16','16:9','1:1'] as AspectRatio[]).map(x=><button type="button" key={x} onClick={()=>setRatio(x)} className={`rounded-xl px-3 py-3 text-sm ${ratio===x?'bg-cyan-500/20 ring-1 ring-cyan-300/20':'bg-white/5 text-white/55'}`}>{x}</button>)}</div></div><div><div className="mb-2 text-xs text-white/40">RESOLUTION</div><div className="grid grid-cols-2 gap-2"><button type="button" onClick={()=>setResolution('720p')} className={`rounded-xl px-3 py-2 text-xs ${resolution==='720p'?'bg-cyan-500/20 ring-1 ring-cyan-300/20':'bg-white/5 text-white/55'}`}>720p</button><button type="button" onClick={()=>setResolution('1080p')} className={`rounded-xl px-3 py-2 text-xs ${resolution==='1080p'?'bg-cyan-500/20 ring-1 ring-cyan-300/20':'bg-white/5 text-white/55'}`}>1080p</button></div></div><div><div className="mb-2 text-xs text-white/40">CHARACTER / IDENTITY BIBLE</div><textarea value={character} onChange={e=>setCharacter(e.target.value)} rows={3} className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-xs outline-none"/></div></div></div>
+
+          <div className="glass rounded-3xl p-4 sm:p-5"><div className="mb-4 flex items-center justify-between"><b>3. Audio & Output</b><span className="text-xs text-cyan-300">REAL AI</span></div><div className="space-y-3"><div className="rounded-2xl border border-cyan-400/10 bg-cyan-400/5 p-4"><div className="flex items-center gap-2 font-semibold"><AudioLines size={17}/> Audio AI</div><p className="mt-2 text-xs leading-5 text-white/50">Fal Wan 2.7 dapat menghasilkan audio latar otomatis pada clip ketika audio_url tidak diberikan. Ini berbeda dari narasi suara guru/TTS.</p></div><div className="rounded-2xl border border-white/10 bg-black/10 p-4"><div className="text-xs text-white/40">CLIP YANG DIHASILKAN</div><div className="mt-1 text-2xl font-black">{generatedClip || 0}s</div><div className="mt-1 text-xs text-white/35">Project target: {projectDuration}s · storyboard: {scenes.length} scene · total storyboard: {total}s</div></div>{videoUrl&&<a href={videoUrl} download="ai-world-studio-x-pro.mp4" className="flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-bold text-black"><Download size={16} className="mr-2"/>Download MP4</a>}</div></div>
+        </div>
+
+        <div className="glass rounded-3xl p-4 sm:p-5"><div className="mb-4 flex items-center justify-between"><b>4. Storyboard & Scene Queue</b><span className="text-xs text-white/35">{scenes.length?`${scenes.length} scene · ${total}s`:'Belum dibuat'}</span></div>{scenes.length?<div className="space-y-3">{scenes.map((s,i)=><div key={s.id} className="rounded-2xl border border-white/10 bg-black/10 p-4"><div className="flex gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-sm font-black text-violet-200">{i+1}</div><div className="min-w-0 flex-1"><div className="flex justify-between gap-3"><b className="break-words">{s.title}</b><span className="shrink-0 text-xs text-white/35">{s.duration}s</span></div><div className="mt-2 text-xs leading-5 text-white/45">{s.visualPrompt}</div></div><button type="button" onClick={()=>setStatus(`Scene ${i+1} siap di-regenerate PRO`)} className="h-9 w-9 shrink-0 rounded-xl bg-white/5" aria-label={`Regenerate scene ${i+1}`}><RefreshCw size={14}/></button></div></div>)}</div>:<div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/35">Klik Buat Storyboard untuk menyusun scene project.</div>}</div>
+
+        {videoUrl&&<div className="glass rounded-3xl p-4 sm:p-5"><div className="mb-3 flex items-center justify-between"><b>5. Preview PRO</b><span className="text-xs text-cyan-300">MP4</span></div><video src={videoUrl} controls playsInline className="aspect-video w-full rounded-2xl bg-black"/></div>}
+      </section>
+
+      <aside className="hidden space-y-4 lg:block"><div className="glass rounded-3xl p-5"><b>PRO Engine</b><div className="mt-4 space-y-3 text-xs text-white/55"><div className="rounded-2xl bg-white/5 p-3"><b className="text-white">Fal AI Wan 2.7</b><p className="mt-1">Text-to-video nyata, 2–15 detik per clip.</p></div><div className="rounded-2xl bg-white/5 p-3"><b className="text-white">No Mock</b><p className="mt-1">Tidak ada fallback Demo/Mock.</p></div><div className="rounded-2xl bg-white/5 p-3"><b className="text-white">Long Form</b><p className="mt-1">Storyboard mendukung target panjang; render akhir perlu orkestrasi multi-clip.</p></div></div></div></aside>
+    </main>
+  </div>;
 }
 
-function MenuList({ active, onSelect }: { active: Section; onSelect: (section: Section) => void }) {
-  return (
-    <nav className="space-y-1" aria-label="PRO menu">
-      {menu.map(({ name, icon: Icon }) => (
-        <button
-          type="button"
-          key={name}
-          onClick={() => onSelect(name)}
-          aria-pressed={active === name}
-          className={`relative z-30 flex w-full cursor-pointer items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm transition active:scale-[0.99] ${
-            active === name ? 'bg-violet-500/15 text-white ring-1 ring-violet-400/20' : 'text-white/65 hover:bg-white/5 hover:text-white'
-          }`}
-        >
-          <Icon size={17} className="shrink-0" />
-          <span className="min-w-0 break-words">{name}</span>
-        </button>
-      ))}
-    </nav>
-  );
-}
-
-function Card({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="rounded-2xl border border-white/10 bg-black/10 p-4"><div className="text-[10px] font-bold tracking-[.2em] text-white/35">{label}</div>{children}</div>;
-}
-
-function SettingBlock({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><div className="mb-2 text-xs text-white/40">{label}</div>{children}</div>;
-}
-
-function ActionButton({ label, onClick, primary = false }: { label: string; onClick: () => void; primary?: boolean }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`cursor-pointer rounded-2xl p-3 text-sm font-bold transition active:scale-[0.99] ${
-        primary ? 'bg-violet-500/20 text-violet-100 ring-1 ring-violet-400/20 hover:bg-violet-500/30' : 'bg-white/5 text-white hover:bg-white/10'
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
+function MenuList({active,onSelect}:{active:Section;onSelect:(name:Section)=>void}){return <nav className="space-y-1">{menu.map(({name,icon:Icon})=><button type="button" key={name} onClick={()=>onSelect(name)} className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm transition ${active===name?'bg-violet-500/15 text-violet-100 ring-1 ring-violet-400/20':'text-white/55 hover:bg-white/5 hover:text-white'}`}><Icon size={17}/><span className="truncate">{name}</span></button>)}</nav>}
+function Card({label,children}:{label:string;children:React.ReactNode}){return <div className="rounded-2xl border border-white/10 bg-black/10 p-4"><div className="text-[10px] font-bold tracking-[.2em] text-white/35">{label}</div>{children}</div>}
