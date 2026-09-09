@@ -12,7 +12,7 @@ const NEGATIVE_PROMPT = [
 
 function getDuration(seconds: number): WanDuration {
   const allowed: WanDuration[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-  const target = Math.round(Number(seconds) || 5);
+  const target = Math.max(2, Math.min(15, Math.round(Number(seconds) || 5)));
   return allowed.reduce<WanDuration>(
     (best, value) => Math.abs(value - target) < Math.abs(best - target) ? value : best,
     5,
@@ -20,7 +20,7 @@ function getDuration(seconds: number): WanDuration {
 }
 
 export const falProvider: VideoProvider = {
-  key: 'HUGGING_FACE',
+  key: 'FAL_AI',
   name: 'Fal AI · Wan 2.7',
 
   async generateTextToVideo(req: VideoRequest, scene: Scene) {
@@ -44,27 +44,32 @@ export const falProvider: VideoProvider = {
 
     const duration = getDuration(req.duration);
 
-    const result = await fal.subscribe('fal-ai/wan/v2.7/text-to-video', {
-      input: {
-        prompt: prompt.slice(0, 5000),
-        negative_prompt: NEGATIVE_PROMPT.slice(0, 500),
-        aspect_ratio: req.aspectRatio,
-        resolution: req.resolution === '720p' ? '720p' : '1080p',
-        duration,
-        enable_prompt_expansion: true,
-      },
-      logs: false,
-    });
+    try {
+      const result = await fal.subscribe('fal-ai/wan/v2.7/text-to-video', {
+        input: {
+          prompt: prompt.slice(0, 5000),
+          negative_prompt: NEGATIVE_PROMPT.slice(0, 500),
+          aspect_ratio: req.aspectRatio,
+          resolution: req.resolution === '720p' ? '720p' : '1080p',
+          duration,
+          enable_prompt_expansion: true,
+        },
+        logs: false,
+      });
 
-    const video = (result.data as { video?: { url?: string } } | undefined)?.video;
-    if (!video?.url) throw new Error('Fal AI tidak mengembalikan URL video.');
+      const video = (result.data as { video?: { url?: string } } | undefined)?.video;
+      if (!video?.url) throw new Error('Fal AI tidak mengembalikan URL video.');
 
-    return {
-      id: result.requestId || `fal-${scene.id}`,
-      status: 'COMPLETED' as const,
-      videoUrl: video.url,
-      message: `Video PRO selesai melalui Fal AI Wan 2.7. Durasi clip: ${duration} detik.`,
-      provider: 'HUGGING_FACE',
-    };
+      return {
+        id: result.requestId || `fal-${scene.id}`,
+        status: 'COMPLETED' as const,
+        videoUrl: video.url,
+        message: `Video PRO selesai melalui Fal AI Wan 2.7. Clip ${duration} detik.`,
+        provider: 'FAL_AI' as const,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Fal AI gagal menghasilkan video.';
+      throw new Error(`Fal AI Wan 2.7 gagal: ${message}`);
+    }
   },
 };
